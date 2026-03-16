@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>AI Business Idea Generator</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+  <div class="bg-blob blob1"></div>
+  <div class="bg-blob blob2"></div>
+  <div class="bg-blob blob3"></div>
+
+  <div class="page-wrapper">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-icon">💡</div>
+      <h1 class="header-title">Business Idea AI</h1>
+      <p class="header-sub">Tell us about yourself — we'll find your perfect business idea</p>
+    </header>
+
+    <!-- Input Card -->
+    <div class="card input-card">
+
+      <!-- Skills -->
+      <div class="field-group">
+        <label class="field-label" for="skills">
+          Your Skills
+          <span class="field-hint">e.g. cooking, coding, teaching, designing</span>
+        </label>
+        <textarea
+          id="skills"
+          class="text-input"
+          placeholder="e.g. I know cooking, social media, photography..."
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- Interests -->
+      <div class="field-group">
+        <label class="field-label" for="interest">
+          Your Interests / Passions
+          <span class="field-hint">e.g. fitness, food, travel, finance</span>
+        </label>
+        <textarea
+          id="interest"
+          class="text-input"
+          placeholder="e.g. I love fitness, technology, helping people..."
+          rows="2"
+        ></textarea>
+      </div>
+
+      <!-- Budget -->
+      <div class="field-group">
+        <label class="field-label">Investment Budget</label>
+        <div class="tab-group" id="budgetTabs">
+          <button class="tab-btn active" data-val="Low (Under ₹10,000)"     onclick="selectTab('budgetTabs','Low (Under ₹10,000)')">💰 Low<span class="tab-sub">Under ₹10K</span></button>
+          <button class="tab-btn"        data-val="Medium (₹10,000–₹50,000)" onclick="selectTab('budgetTabs','Medium (₹10,000–₹50,000)')">💰💰 Medium<span class="tab-sub">₹10K–₹50K</span></button>
+          <button class="tab-btn"        data-val="High (Above ₹50,000)"     onclick="selectTab('budgetTabs','High (Above ₹50,000)')">💰💰💰 High<span class="tab-sub">Above ₹50K</span></button>
+        </div>
+      </div>
+
+      <!-- Experience -->
+      <div class="field-group">
+        <label class="field-label">Experience Level</label>
+        <div class="tab-group" id="expTabs">
+          <button class="tab-btn active" data-val="Beginner"     onclick="selectTab('expTabs','Beginner')">🌱 Beginner</button>
+          <button class="tab-btn"        data-val="Intermediate" onclick="selectTab('expTabs','Intermediate')">🌿 Intermediate</button>
+          <button class="tab-btn"        data-val="Expert"       onclick="selectTab('expTabs','Expert')">🌳 Expert</button>
+        </div>
+      </div>
+
+      <!-- Business Type -->
+      <div class="field-group">
+        <label class="field-label">Business Type</label>
+        <div class="tab-group" id="typeTabs">
+          <button class="tab-btn active" data-val="Online"  onclick="selectTab('typeTabs','Online')">💻 Online</button>
+          <button class="tab-btn"        data-val="Offline" onclick="selectTab('typeTabs','Offline')">🏪 Offline</button>
+          <button class="tab-btn"        data-val="Both"    onclick="selectTab('typeTabs','Both')">🌐 Both</button>
+        </div>
+      </div>
+
+      <!-- Quick Fill Examples -->
+      <div class="example-row">
+        <span class="example-label">Try example:</span>
+        <button class="example-chip" onclick="fillExample('cooking, baking, creativity', 'food, home business, instagram')">🍰 Baker</button>
+        <button class="example-chip" onclick="fillExample('coding, web design, problem solving', 'technology, startups, freelancing')">💻 Developer</button>
+        <button class="example-chip" onclick="fillExample('teaching, communication, patience', 'education, children, learning')">📚 Teacher</button>
+        <button class="example-chip" onclick="fillExample('fitness, motivation, nutrition', 'health, wellness, sports')">💪 Fitness</button>
+      </div>
+
+      <!-- Submit Button -->
+      <button class="generate-btn" id="generateBtn" onclick="getIdeas()">
+        <span id="btnText">🚀 Generate Business Ideas</span>
+        <span id="btnLoader" class="btn-loader hidden">
+          <span class="spinner"></span> Thinking of ideas...
+        </span>
+      </button>
+
+    </div>
+
+    <!-- Results Section -->
+    <div id="resultsSection" class="results-section hidden">
+      <div class="results-header">
+        <h2 class="results-title">Your Business Ideas</h2>
+        <div class="results-badges">
+          <span class="results-badge badge-budget"  id="badgeBudget">Low</span>
+          <span class="results-badge badge-exp"     id="badgeExp">Beginner</span>
+          <span class="results-badge badge-type"    id="badgeType">Online</span>
+        </div>
+      </div>
+      <div id="ideasOutput" class="ideas-output"></div>
+    </div>
+
+    <!-- Error -->
+    <div id="errorMsg" class="error-box hidden"></div>
+
+    <footer class="footer">
+      Powered by <strong>Groq AI</strong> &amp; <strong>Flask</strong> &nbsp;·&nbsp; Your next big idea is here 💡
+    </footer>
+
+  </div>
+
+  <script>
+    // State — track selected tab values
+    let selectedBudget = "Low (Under ₹10,000)";
+    let selectedExp    = "Beginner";
+    let selectedType   = "Online";
+
+    // Generic tab switcher
+    function selectTab(groupId, value) {
+      // Update state
+      if (groupId === 'budgetTabs') selectedBudget = value;
+      if (groupId === 'expTabs')    selectedExp    = value;
+      if (groupId === 'typeTabs')   selectedType   = value;
+
+      // Toggle active class
+      document.querySelectorAll(`#${groupId} .tab-btn`).forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.val === value);
+      });
+    }
+
+    // Fill example data
+    function fillExample(skills, interest) {
+      document.getElementById("skills").value   = skills;
+      document.getElementById("interest").value = interest;
+    }
+
+    // Format AI markdown to HTML
+    function formatIdeas(text) {
+      return text
+        .replace(/---/g, '<hr class="idea-divider">')
+        .replace(/### (.*)/g, '<h3 class="idea-title">$1</h3>')
+        .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+        .replace(/^\d+\.\s(.+)$/gm, '<li>$1</li>')
+        .replace(/^[-•]\s(.+)$/gm, '<li class="bullet-item">$1</li>')
+        .replace(/(<li class="bullet-item">.*?<\/li>\n?)+/gs, m => `<ul>${m}</ul>`)
+        .replace(/(<li>(?!<).*?<\/li>\n?)+/gs, m => `<ol>${m}</ol>`)
+        .replace(/\n\n/g, '</p><p>')
+        .replace(/\n/g, '<br>');
+    }
+
+    // Main function — call backend
+    async function getIdeas() {
+      const skills   = document.getElementById("skills").value.trim();
+      const interest = document.getElementById("interest").value.trim();
+
+      if (!skills)   { showError("Please enter your skills!");     return; }
+      if (!interest) { showError("Please enter your interests!");  return; }
+
+      setLoading(true);
+      hideError();
+      document.getElementById("resultsSection").classList.add("hidden");
+
+      try {
+        const response = await fetch("/get-ideas", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            skills:        skills,
+            interest:      interest,
+            budget:        selectedBudget,
+            experience:    selectedExp,
+            business_type: selectedType
+          })
+        });
+
+        const data = await response.json();
+        if (data.error) showError(data.error);
+        else            displayIdeas(data.ideas);
+
+      } catch (err) {
+        showError("Network error. Make sure the Flask server is running.");
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    // Render results
+    function displayIdeas(ideasText) {
+      document.getElementById("badgeBudget").textContent = "💰 " + selectedBudget.split(" ")[0];
+      document.getElementById("badgeExp").textContent    = "🌱 " + selectedExp;
+      document.getElementById("badgeType").textContent   = "💻 " + selectedType;
+
+      document.getElementById("ideasOutput").innerHTML =
+        `<div class="idea-content">${formatIdeas(ideasText)}</div>`;
+
+      const section = document.getElementById("resultsSection");
+      section.classList.remove("hidden");
+      section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function setLoading(on) {
+      document.getElementById("generateBtn").disabled = on;
+      document.getElementById("btnText").classList.toggle("hidden", on);
+      document.getElementById("btnLoader").classList.toggle("hidden", !on);
+    }
+    function showError(msg) {
+      const el = document.getElementById("errorMsg");
+      el.textContent = msg;
+      el.classList.remove("hidden");
+    }
+    function hideError() {
+      document.getElementById("errorMsg").classList.add("hidden");
+    }
+  </script>
+
+</body>
+</html>
